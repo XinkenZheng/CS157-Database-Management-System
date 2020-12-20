@@ -1,0 +1,447 @@
+Part I: World War II capital ships
+
+Classes(class, type, country, numGuns, bore, displacement)
+Ships(name, class, launched)
+Battles(name, date)
+Outcomes(ship, battle, result)
+
+2.Select ships.name,classes.displacement,numguns FROM ships,outcomes 
+  natural join classes
+  Where ships.class = classes.class AND ships.name = outcomes.ship AND battle = 'Guadalcanal';
+
+output:
+name, displacement, numguns
+'Kirishima', '32000', '8'
+'Washington', '37000', '9'
+
+--------------------------------------------------------------------------
+4.SELECT DISTINCT country
+FROM classes c1
+WHERE type = 'bb'
+AND EXISTS (SELECT *
+            FROM classes c2
+            WHERE type = 'be'
+            AND c1.country = c2.country)
+
+output:
+country
+'Gt. Britain'
+Japan
+
+--------------------------------------------------------------------------
+
+6.select outcomes.battle from outcomes,ships,classes
+Where outcomes.ship = ships.name and classes.class = ships.class 
+Having count(classes.country) = 3;
+
+output:
+battle
+
+--------------------------------------------------------------------------
+
+8.
+1)Select ships.class from ships
+Where ships.name in(Select outcomes.ship from outcomes 
+			Where outcomes.result = 'sunk' and outcomes.ship = ships.name);
+
+2)Select ships.class from ships
+Where Exists(Select * from outcomes 
+			Where outcomes.result = 'sunk' and outcomes.ship = ships.name);
+
+output:
+# class
+'Kongo'
+
+--------------------------------------------------------------------------
+10.
+1.Select battle from outcomes
+Where EXISTS
+(Select * from ships 
+WHERE outcomes.ship = ships.name 
+and ships.class = 'Kongo')
+
+2.Select battle from outcomes
+  Where 'Kongo' in 
+(Select ships.class from ships WHERE outcomes.ship = ships.name)
+
+output:
+# battle
+'Guadalcanal'
+
+--------------------------------------------------------------------------
+
+12.SELECT count(class)  as num_classes from classes
+	WHERE type = 'bb';
+
+output:
+# num_classes
+'6'
+
+--------------------------------------------------------------------------
+
+
+14.
+Select round(AVG(numGuns)) as avg_num_guns from Ships, Classes 
+where Ships. Class = Classes.class and type='bb'
+
+output:
+
+# avg_num_guns
+'9'
+
+
+
+
+
+--------------------------------------------------------------------------
+16.
+Select classes.class, count(*)as num_sunk   from outcomes,ships,classes
+WHERE outcomes.ship = ships.name  
+and outcomes.result = 'sunk' 
+and ships.class = classes.class
+
+# class, num_sunk
+'Kongo', '1'
+
+
+
+--------------------------------------------------------------------------
+18.
+Select classes.country, Avg(bore * bore * bore)/2 as avg_shell_weight from classes,ships
+where ships.class = classes.class
+group by classes.country
+
+output:
+# country, avg_shell_weight
+'USA', '1879.00000000'
+'\'Gt. Britain\'', '1687.50000000'
+'Japan', '1886.66666667'
+
+--------------------------------------------------------------------------
+
+20.
+insert into class values('Vittorio Veneto','bb' ,'Italy',9,15,41000);
+insert into ships values('Vittorio Veneto','Vittorio Veneto',1940);
+insert into ships values('Italia','Vittorio Veneto',1940);
+insert into ships values('Roma','Vittorio Veneto',1942);
+
+BEFORE CLASS TABLE:
+# class, type, country, numguns, bore, displacement
+'\'North Carolina\'', 'bb', 'USA', '9', '16', '37000'
+'Bismarck', 'bb', 'Germany ', '8', '15', '42000'
+'Iowa', 'bb', 'USA', '9', '16', '46000'
+'Kongo', 'be', 'Japan', '8', '14', '32000'
+'Renown', 'be', '\'Gt. Britain\'', '6', '15', '32000'
+'Revenge', 'bb', '\'Gt. Britain\'', '8', '15', '29000'
+'Tennessee', 'bb', 'USA', '12', '14', '32000'
+'Yamato', 'bb', 'Japan', '9', '18', '65000'
+
+AFTER CLASS TABLE:
+# class, type, country, numguns, bore, displacement
+'\'North Carolina\'', 'bb', 'USA', '9', '16', '37000'
+'Bismarck', 'bb', 'Germany ', '8', '15', '42000'
+'Iowa', 'bb', 'USA', '9', '16', '46000'
+'Kongo', 'be', 'Japan', '8', '14', '32000'
+'Renown', 'be', '\'Gt. Britain\'', '6', '15', '32000'
+'Revenge', 'bb', '\'Gt. Britain\'', '8', '15', '29000'
+'Tennessee', 'bb', 'USA', '12', '14', '32000'
+'Vittorio Veneto', 'bb', 'Italy', '9', '15', '41000'
+'Yamato', 'bb', 'Japan', '9', '18', '65000'
+
+BEFORE SHIP TABLE:
+Ships = {name class launched
+California Tennessee 1921
+Haruna Kongo 1915
+Hiei Kongo 1914
+Iowa Iowa 1943
+Kirishima Kongo 1915
+Kongo Kongo 1913
+Missouri Iowa 1944
+Musashi Yamato 1942
+'New Jersey' Iowa 1943
+'North Carolina' 'North Carolina' 1941
+Ramillies Revenge 1917
+Renown Renown 1916
+Repulse Renown 1916
+Resolution Revenge 1916
+Revenge Revenge 1916
+'Royal Oak' Revenge 1916
+'Royal Sovereign' Revenge 1916
+Tennessee Tennessee 1920
+Washington 'North Carolina' 1941
+Wisconsin Iowa 1944
+Yamato Yamato 1941
+
+AFTER SHIP TABLE:
+# name, class, launched
+'Musashi', 'Yamato', '1942'
+'Yamato', 'Yamato', '1941'
+'Italia', 'Vittorio Veneto', '1940'
+'Roma', 'Vittorio Veneto', '1942'
+'Vittorio Veneto', 'Vittorio Veneto', '1940'
+'California', 'Tennessee', '1921'
+'Tennessee', 'Tennessee', '1920'
+'\'Royal Oak\'', 'Revenge', '1916'
+'\'Royal Sovereign\'', 'Revenge', '1916'
+'Ramillies', 'Revenge', '1917'
+'Resolution', 'Revenge', '1916'
+'Revenge', 'Revenge', '1916'
+'Renown', 'Renown', '1916'
+'Repulse', 'Renown', '1916'
+'Haruna', 'Kongo', '1915'
+'Hiei', 'Kongo', '1914'
+'Kirishima', 'Kongo', '1915'
+'Kongo', 'Kongo', '1913'
+'\'New Jersey\'', 'Iowa', '1943'
+'Iowa', 'Iowa', '1943'
+'Missouri', 'Iowa', '1944'
+'Wisconsin', 'Iowa', '1944'
+'\'North Carolina\'', '\'North Carolina\'', '1941'
+'Washington', '\'North Carolina\'', '1941'
+
+
+
+--------------------------------------------------------------------------
+
+22.
+update classes set bore = bore * 2.5, displacement = displacement * 1.1
+
+output:
+
+BEFORE:
+# class, type, country, numguns, bore, displacement
+'\'North Carolina\'', 'bb', 'USA', '9', '16', '37000'
+'Bismarck', 'bb', 'Germany ', '8', '15', '42000'
+'Iowa', 'bb', 'USA', '9', '16', '46000'
+'Kongo', 'be', 'Japan', '8', '14', '32000'
+'Renown', 'be', '\'Gt. Britain\'', '6', '15', '32000'
+'Revenge', 'bb', '\'Gt. Britain\'', '8', '15', '29000'
+'Tennessee', 'bb', 'USA', '12', '14', '32000'
+'Vittorio Veneto', 'bb', 'Italy', '9', '15', '41000'
+'Yamato', 'bb', 'Japan', '9', '18', '65000'
+
+AFTER
+# class, type, country, numguns, bore, displacement
+'\'North Carolina\'', 'bb', 'USA', '9', '40', '40700'
+'Bismarck', 'bb', 'Germany ', '8', '38', '46200'
+'Iowa', 'bb', 'USA', '9', '40', '50600'
+'Kongo', 'be', 'Japan', '8', '35', '35200'
+'Renown', 'be', '\'Gt. Britain\'', '6', '38', '35200'
+'Revenge', 'bb', '\'Gt. Britain\'', '8', '38', '31900'
+'Tennessee', 'bb', 'USA', '12', '35', '35200'
+'Vittorio Veneto', 'bb', 'Italy', '9', '38', '45100'
+'Yamato', 'bb', 'Japan', '9', '45', '71500'
+
+
+--------------------------------------------------------------------------
+
+
+
+
+
+Part II: SQL Moive-Rating Exercises
+
+
+2.
+SELECT distinct year FROM movie,rating 
+WHERE  rating.stars > 3 and rating.stars < 6 and rating.mID = movie.mID
+ORDER BY movie.year
+
+# year
+'1937'
+'1939'
+'1981'
+'2009'
+--------------------------------------------------------------------------
+
+4.
+SELECT reviewer.name, movie.title,rating.stars from movie,reviewer,rating
+WHERE movie. director = reviewer.name 
+and reviewer.rID = rating.rID 
+and movie.mID = rating.mID;
+
+
+# name, title, stars
+'James Cameron', 'Avatar', '5'
+
+--------------------------------------------------------------------------
+
+6.
+SELECT reviewer.name from reviewer
+UNION
+Select movie.title from movie
+ORDER BY name
+
+# name
+'Ashley White'
+'Avatar'
+'Brittany Harris'
+'Chris Jackson'
+'Daniel Lewis'
+'E.T.'
+'Elizabeth Thomas'
+'Gone with the Wind'
+'James Cameron'
+'Mike Anderson'
+'Raiders of the Lost Ark'
+'Sarah Martinez'
+'Snow White'
+'Star Wars'
+'The Sound of Music'
+'Titanic'
+
+--------------------------------------------------------------------------
+
+
+
+8.
+select Reviewer.name, Movie.title
+from Reviewer, Movie, 
+(select R1.rID, R1.mID from Rating R1, Rating R2 
+where R1.rID=R2.rID and R1.mID=R2.mID
+and R2.ratingDate>R1.ratingDate and R2.stars>R1.stars) as T
+where Reviewer.rID=T.rID and Movie.mID=T.mID
+
+output:
+# name, title
+'Sarah Martinez', 'Gone with the Wind'
+
+--------------------------------------------------------------------------
+
+10.
+select movie.title from Movie
+Where movie.mID not in
+(Select rating.mID from rating )
+
+output:
+# title
+'Star Wars'
+'Titanic'
+
+--------------------------------------------------------------------------
+
+12.
+P.s. The question asked to sort the list in alphabetical order but the expected output posted was not.
+
+Select movie.title,max(rating.stars) From movie,rating
+WHERE movie. mId = rating. mID 
+group by title
+order by title ASC
+
+output:
+# title, max(rating.stars)
+'Avatar', '5'
+'E.T.', '3'
+'Gone with the Wind', '4'
+'Raiders of the Lost Ark', '4'
+'Snow White', '5'
+'The Sound of Music', '3'
+
+--------------------------------------------------------------------------
+
+14.
+Select R1.title , max(R2.stars)-min(R2.stars) as rating_spread FROM movie R1,rating  R2
+WHERE R1.mID = R2.mID 
+GROUP BY R1.title
+Order by rating_spread DESC ,title ASC
+
+# title, rating_spread
+'Avatar', '2'
+'Gone with the Wind', '2'
+'Raiders of the Lost Ark', '2'
+'E.T.', '1'
+'Snow White', '1'
+'The Sound of Music', '1'
+
+--------------------------------------------------------------------------
+16.
+Select title, director FROM movie 
+WHERE director in(
+SELECT m.director
+	 FROM movie m
+	 GROUP BY m.director
+	 HAVING count(*) >1)
+Order by director, title
+
+# title, director
+'Avatar', 'James Cameron'
+'Titanic', 'James Cameron'
+'E.T.', 'Steven Spielberg'
+'Raiders of the Lost Ark', 'Steven Spielberg'
+
+
+--------------------------------------------------------------------------
+
+18.
+select movie.title, avg(rating.stars) as avg_rate from rating,movie
+WHERE movie.mid = rating.mid 
+group by rating.mid
+having avg_rate = 
+(select min(s.stars) as stars from (select mID, avg(stars) as stars from rating
+group by mid) as s)
+
+
+Output:
+# title, avg_rate
+'The Sound of Music', '2.5000'
+'E.T.', '2.5000'
+
+
+--------------------------------------------------------------------------
+
+
+20.
+Select reviewer.name From rating,reviewer
+WHERE reviewer.rID = rating.rID and ratingDate is NULL
+
+output:
+# name
+'Daniel Lewis'
+'Chris Jackson'
+
+--------------------------------------------------------------------------
+
+22.
+insert into reviewer values(209, "Roger Ebert")
+
+select reviewer.name,rID from reviewer
+WHERE name = "Roger Ebert" and rID = 209;
+
+output:
+# name, rID
+'Roger Ebert', '209'
+
+--------------------------------------------------------------------------
+
+24.
+
+update movie
+set year = year + 25
+WHERE movie.mID 
+in( Select mID from rating
+group by mID
+Having avg(rating.stars) >= 4)
+
+select count(*) from movie
+# count(*)
+'5'
+
+--------------------------------------------------------------------------
+
+26.
+
+delete from rating
+where rating.mID != (select movie.mID from movie)
+
+
+select count(*) from rating
+# count(*)
+'2'
+'
+--------------------------------------------------------------------------
+
+
+
+
+
+
