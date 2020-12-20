@@ -1,0 +1,333 @@
+Part I: Indexes
+
+Q1 = SELECT * FROM Ships WHERE name = n.
+
+No Index: 50
+name Index: 2 (1 index access + 1 tuples access)
+class Index:50
+launched Index: 50
+(name,class) index:2
+(name launched) index:2
+(class,launched) index:50
+All indexes： 2 
+
+
+Q2= SELECT * FROM Ships WHERE class = c.
+
+No Index:50
+name Index:50:
+class Index: 2(1 for index 1 for access)
+launched index:50
+(name,class) index:2
+(name,launched) index:50
+(class,lauched) index:2
+all indexes: 2
+
+
+Q3 = SELECT * FROM Ships WHERE launched = y.
+
+No Index:50
+name Index:50
+class index:50
+launchecd Index: 26(1 index access + 25 tuples access)
+(name,class) index:50
+(name,launched)index:26
+(class,launched)index 26
+all indexes: 26(name index and class index won't help)
+
+
+I:
+INSERT INTO Ships VALUES(name,class,launched);
+
+No index: 2
+name index: 4
+class index: 4
+launched index: 4
+(name,class) index:6
+(name,launched)index:6
+(class,launched)index:6
+all indexes: 8 
+
+
+p1 = Fraction of time doing Q1
+P2 = Fraction of time doing Q2
+p3 = Fraction of time doing Q3
+I: 1-p1-p2-p3
+
+
+1.
+No index:
+    50P1+50P2+50P3+2(1-p1-p2-p3)
+=     50P1+50P2+50P3+2-2P1-2P2-2P3
+=    48P1+48P2+48P3+2
+
+
+Name index:
+    2P1+50P2+50P3+4(1-p1-p2-p3)
+
+=    -2P1+46P2+46P3+4
+
+class Index:
+    50P1+2P2+50P3+4(1-p1-p2-p3)
+=    46P1-2P2+46P3+4
+
+launched index:
+    50p1+50p2+26p3+4(1-p1-p2-p3)
+=   46p1+46p2+22p3+4
+
+(name,class) index:
+     2p1+2p2+50p3+6(1-p1-p2-p3)
+=    -4p1+-4p2+44p3+6
+
+
+(name,launched) index:
+     2p1+50p2+26p3+6(1-p1-p2-p3)
+=    -4p1+44p2+20p3+6
+
+(class,launched) index:
+     50p1+2p2+26p3+6(1-p1-p2-p3)
+=    -4p1+44p2+20p3+6
+
+all indexes:
+     2p1+2p2+26p3+8(1-p1-p2-p3)
+=    -6p1+-6p2+18p3+8
+
+
+2.p1 = 0.5, p2 = 0.2, p3 = 0.2,
+
+No Index:	48(0.5)+48(0.2)+48(0.2)+2=45.2
+name Index:	-2(0.5)+46(0.2)+46(0.2)+4=21.4
+class Index: 	46(0.5)-2(0.2)+46(0.2)+4=35.8
+launched index:	46(0.5)+46(0.2)+22(0.2)+4=40.6
+(name,class) 	-4(0.5)+-4(0.2)+44(0.2)+6=12
+(name,launched) -4(0.5)+44(0.2)+20(0.2)+6=16.8
+(class,lauched) -4(0.5)+44(0.2)+20(0.2)+6=16.8
+all indexes:	-6(0.5)+-6(0.2)+18(0.2)+8=7.4
+
+
+All Indexes is the best choice since it has the lowest average.
+
+3.p1 = 0.2, p2 = 0.5, p3 = 0.2
+
+No Index:	48(0.2)+48(0.5)+48(0.2)+2=45.2
+name Index:	-2(0.2)+46(0.5)+46(0.2)+4=35.8
+class Index: 	46(0.2)-2(0.5)+46(0.2)+4=21.4
+launched index:	46(0.2)+46(0.5)+22(0.2)+4=40.6
+(name,class) 	-4(0.2)+-4(0.5)+44(0.2)+6=12
+(name,launched) -4(0.2)+44(0.5)+20(0.2)+6=31.2
+(class,lauched) -4(0.2)+44(0.5)+20(0.2)+6=31.2
+all indexes:	-6(0.2)+-6(0.5)+18(0.2)+8=7.4
+
+
+All Indexes is the best choice since it has the lowest average.
+
+
+
+4.p1 = 0.2, p2 = 0.2, p3 = 0.5
+
+No Index:	48(0.2)+48(0.2)+48(0.5)+2=45.2
+name Index:	-2(0.2)+46(0.2)+46(0.5)+4=35.8
+class Index: 	46(0.2)-2(0.2)+46(0.5)+4=35.8
+launched index:	46(0.2)+46(0.2)+22(0.5)+4=33.4
+(name,class) 	-4(0.2)+-4(0.2)+44(0.5)+6=26.4
+(name,launched) -4(0.2)+44(0.2)+20(0.5)+6=24
+(class,lauched) -4(0.2)+44(0.2)+20(0.5)+6=24
+all indexes:	-6(0.2)+-6(0.2)+18(0.5)+8=14.6
+
+All Indexes is the best choice since it has the lowest average.
+
+
+5.p1 = 0.1, p2 = 0.1, p3 = 0.1
+
+No Index:	48(0.1)+48(0.1)+48(0.1)+2=16.4
+name Index:	-2(0.1)+46(0.1)+46(0.1)+4=13
+class Index: 	46(0.1)-2(0.1)+46(0.1)+4=13
+launched index:	46(0.1)+46(0.1)+22(0.1)+4=15.4
+(name,class) 	-4(0.1)+-4(0.1)+44(0.1)+6=9.6
+(name,launched) -4(0.1)+44(0.1)+20(0.1)+6=12
+(class,lauched) -4(0.1)+44(0.1)+20(0.1)+6=12
+all indexes:	-6(0.1)+-6(0.1)+18(0.1)+8=8.6
+
+All Indexes is the best choice since it has the lowest average.
+
+
+
+
+
+Part II: Design Theory
+
+
+a.R(A, B, C, D) with FD’s A B -> C, C -> D, and D -> A.
+
+functional dependencies:
+ABC
+CD
+DA
+
+ABC is closure of AB = {A,B,C,D} is relation R, it is in BCNF
+CD is closure of C = {C,D,A} not relation R, vioaltes BCNF
+DA = closure of D = {D,A} not relation R, violates BCNF
+
+CD and DA violates BCNF
+
+2. 
+decomposition relation CD
+R1 = {A,C,D}
+R2 = {C,B}
+
+functional dependencies for R1 are CD,CA,DA
+R2 has no functional dependencuies and is in BCNF
+
+CD and CA is closure of C = {C,D,A} is in BCNF
+DA is closure of D = {D,A} violates BCNF
+
+
+Decompose R1:
+R3:{D,A}
+R4:{D,C}
+
+both are in relation R, so it is in BCNF.
+
+Set of relations that are BCNF are R2,R3,R4.
+
+b.R (A ,B ,C ,D ) with FD’s B —> C and B -> D.
+
+functional dependencies:
+BC
+BD
+
+BC is closure of B ={B,C,D} not in relation R, violates BCNF
+BD is closure of B ={B,C,D} not in relation R, violates BCNF
+
+BC and BD violates BCNF
+
+2.
+decompose R: R1 = {B,C,D} R2 = {B,A}
+
+functional dependencies for R1 = BC and BD and are in BCNF from given
+functional dependencies for R2 is empty, so it is in BCNF.
+
+R1 and R2 are in BCNF.
+
+
+c.R{A, B, C, D) with FD’s A B -> C, B C -> D, CD -> A, and AD -> B.
+
+FD:   ABC,BCD,CDA,ADB
+
+FD for ABC is closure of AB = {A,B,C,D} in relation R, is in BCNF
+FD for BCD is closure of BC = {D,A,B,C} in relation R, is in BCNF
+FD for CDA is closure of CD = {C,D,A,B} in relation R, is in BCNF
+FD for ADB is closure of AD = {A,D,B,C} in relation R, is in BCNF
+
+
+There are no BCNF violation in relation R. 
+
+2, since they are in BCNF, no decomposition needed.
+
+
+
+d.R(A, B, C, D) with FD’s A->B, B -> C, C -> D, and D -> A.
+
+FD: AB,BC,CD,DA
+
+AB is closure of A = {A,B,C,D} in relation R, is in BCNF.
+BC is closure of B = {B,C,D,A} in relation R, is in BCNF
+CD is closure of C = {C,D,A,B} in relation R, is in BCNF
+DA is closure of A = {D,A,B,C} in relation R, is in BCNF
+
+
+There are no BCNF violation in relation R. 
+
+2, since they are in BCNF, no decomposition needed.
+
+
+
+e.R(A, B , C, D, E ) with FD’s A B -> C , D E -> C , and B -> D.
+
+
+ABC is closure of AB = {A,B,C,D} not in relation R, violates BCNF
+DEC is closure of DE = {D,E,C} not in relation R, violates BCNF
+BD is closure of B = {B,D} not in relation R, violates BCNF
+
+ABC,DEC,BD all violates BCNF.
+
+decompose R
+R1 = {A,B,C,D}
+R2 = {A,B,E}
+
+FD for R1 = ABC and BD
+FD for R2 is empty, it is in BCNF
+
+ABC is closure of AB = {A,B,C,D} in relation R, is in BCNF.
+BD is closure of B = {B,D} not in relation R, violates BCNF.
+
+R1 not in BCNF as BD violates
+
+decompose R1:
+R3 = {A,B,C}
+R4 = {B,D}
+
+both relation are in BCNF,hence R2,R3,R4 are in BCNF.
+
+
+f.R(A, B, C, D, E ) with FD’s A B -> C , C -> D, D -> B , and D -> E.
+
+ABC,CD,DB,DE
+
+ABC = closure of AB = {A,B,C,D,E} is in BCNF
+CD = closure of C = {C,D,B,E} not in BCNF
+DB = closure of D = {D,B,E} not in BCNF
+DE = closure of D = {D,B,E} not in BCNF
+
+CD,DB,DE are not in BCNF
+
+2.
+decompose R into
+R1 = (B,C,D,E)
+R2 = (C,A)
+
+FD for R1 = CD,DB,DE
+FD for R2 is empty and its in BCNF
+
+CD is closure of C = {C,D,B,E} = BCNF
+DB and DE is closure of D = {D,B,E} violates BCNF
+
+decompose R1:
+R3 = C,D
+R4 = D,B,E
+
+R3 and R4 are both in relation R and in BCNF, so R2,R3,andR4 are a set of relations in BCNF.
+
+
+
+
+
+2.
+
+Consider relation R(A,B,C,D) for key(A,D)
+
+FD: A-->B,A-->C
+
+both are not in relation R, violates BCNF
+if we decompose with FD AB first
+
+R1 = {A,B}
+R2 = {A,C,D}
+
+
+R2 is not in BCNF and will require further decompsing
+
+R3 = {A,C}
+R4 = {A,D}
+
+R1,R3,R4 are now all in BCNF
+
+IF BCNF violation A-->BC gets expanded first
+
+R1 ={A,B,C}
+R2 ={A,D}
+
+R1 and R2 are both in BCNF, no further decomposing needed.
+
+
+

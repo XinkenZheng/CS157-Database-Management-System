@@ -1,0 +1,269 @@
+Part I:View Modifications Using Instead of Triggers
+
+1.Create view JordanFriend AS Select distinct name, grade from Highschooler, Friend where ID = ID1 and ID2 in (select distinct ID from Highschooler where name = 'Jordan') ORDER BY Grade;
+ 
+Create Trigger updateH instead of update of name,grade ON JordanFriend
+For each row BEGIN
+update Highschooler set grade = new.grade, name = new.name
+WHERE old.name = name and old.grade = grade and new.grade >=9 and new.grade <=12 and (new.name, new.grade) not in (select name,grade from Highschooler);END;
+
+1a:
+
+sqlite> select * from JordanFriend;
+Gabriel|9
+Tiffany|11
+Andrew|12
+Kyle|12
+Logan|12
+
+1b:
+
+sqlite> select * from JordanFriend order by grade;
+Jordan|9
+Cassandra|9
+Jordan|10
+Jordan|11
+Alexis|11
+Andrew|12
+Kyle|12
+Logan|12
+sqlite> 
+
+
+2.
+drop view OlderFriend;
+Create view OlderFriend AS
+	Select distinct 
+	h.ID as ID1,h.name as name1,h.grade as grade1,
+	h1.ID as ID2,h1.name as name2,h1.grade as grade2 from Highschooler h, Highschooler h1 
+	Where ID1 = h.ID and ID2 = h1.ID 
+	and grade1 +2  <= grade2 
+	and (ID1,ID2) in (Select * from Friend);
+
+
+
+2a.
+
+DROP TRIGGER IF EXISTS remove;
+CREATE TRIGGER remove
+INSTEAD OF DELETE ON OlderFriend
+FOR EACH ROW
+BEGIN
+    DELETE FROM Friend
+    WHERE (ID1 = old.ID1 AND ID2 = old.ID2 AND 
+old.name2 = (SELECT name FROM Highschooler WHERE ID = old.ID2)
+AND
+old.name1 = (SELECT name FROM Highschooler WHERE ID = old.ID1))
+OR
+(ID1 = old.ID2 AND ID2 = old.ID1 AND 
+old.name2 = (SELECT name FROM Highschooler WHERE ID = old.ID2)
+AND
+old.name1 = (SELECT name FROM Highschooler WHERE ID = old.ID1));
+END;
+
+
+
+2b.
+
+drop trigger insertF;
+Create trigger insertF instead of insert ON OlderFriend 
+FOR EACH ROW 
+WHEN (new.ID1,new.name1,new.grade1) in (select ID,name,grade From Highschooler) 
+AND 
+(new.ID2,new.name2,new.grade2) in (select ID,name,grade From Highschooler)
+AND 
+new.grade2 - new.grade1 >=2
+AND
+(new.ID1,new.ID2) NOT IN (Select ID1,ID2 from OlderFriend) 
+BEGIN
+INSERT INTO Friend VALUES(new.ID1,new.ID2),(new.ID2,new.ID1);
+END;
+
+
+
+
+
+
+
+
+Part II:
+
+
+NUMBER 1:
+1.
+drop view  if exists Post80;
+Create view Post80 As
+select title, year from Movie where year > 1980;
+
+title	year
+E.T.	1982
+Titanic	1997
+Avatar	2009
+Raiders of the Lost Ark	1981
+
+1a. Yes it could, for example, if we insert a movie before 1980, it will get inserted into the underlying database, but it will not affect the view.
+	ex: insert into Post80 values ('Titanic', 1976)
+
+Result:
+Movie:
+Gone with the Wind	1939
+Star Wars	1977
+The Sound of Music	1965
+E.T.	1982
+Titanic	1997
+Snow White	1937
+Avatar	2009
+Raiders of the Lost Ark	1981
+Titanic	1976
+
+Post80:
+E.T.	1982
+Titanic	1997
+Avatar	2009
+Raiders of the Lost Ark	1981
+
+1b. no, mishandled deletion would not be permitted.
+
+1c. yes, ex: update Post80 set year = year -10;
+Result:
+4 row(s) affected Rows matched: 4  Changed: 4  Warnings: 0
+
+1d.With check options, it will prevent mishandeld insertion and update examples from 1a and 1c will not be inserted,
+
+drop view Post80 if exists;
+Create view Post80 AS
+select title, year from Movie where year > 1980 
+WITH CHECK OPTION;
+
+insert into Post80 values ('Titanic', 1976);
+Error Code: 1369. CHECK OPTION failed 'theater.post80'
+
+update Post80 set year = year -10;
+Error Code: 1369. CHECK OPTION failed 'theater.post80'
+
+
+
+
+NUMBER 2:
+2.drop view if exists Above3;
+  create view Above3 as
+  select mID, title from Movie M 
+  where mID in 
+  (select mID from Rating where stars > 3);
+
+2a. Yes, for example: insert into Above3 values (109, 'Titanic');
+19:46:08	insert into Above3 values (109, 'Titanic')	1 row(s) affected	0.000 sec
+
+2b. no, mishandled deletion would not be permitted.
+
+2c. Yes, for example: update Above3 set mID = 110 where mID = 101;
+19:46:08	update Above3 set mID = 110 where mID = 101	1 row(s) affected	0.000 sec
+
+
+2d. Like 1a, with check option,it will prevent mishandeld insertion and update examples from 1a and 1c will not be inserted.
+
+drop view if exists Above3;
+create view Above3 as
+  select mID, title from Movie M 
+  where mID in 
+  (select mID from Rating where stars > 3) 
+  WITH CHECK OPTION;
+
+19:51:18	insert into Above3 values (109, 'Titanic')	Error Code: 1369. CHECK OPTION failed 'theater.above3'	0.000 sec
+
+19:52:32	update Above3 set mID = 110 where mID = 101	Error Code: 1369. CHECK OPTION failed 'theater.above3'	0.000 sec
+
+
+
+
+NUMBER 3:
+3.drop view if exists NoDate;
+  create view NoDate as
+  select m.mID, r.rID, title, name from Movie m, Reviewer r, Rating t
+  where m.mID = t.mID and r.rID = t.rID and ratingDate is null;
+
+3a. No, view involving two different table joined together does not allow insertion.
+	Ex:insert into NoDate values(mID =110, rID = 212, title = 'Titanic', name = 'Jackie Chan');
+
+	19:57:27	insert into NoDate values(mID =110, rID = 212, title = 'Titanic', name = 'Jackie Chan')	Error Code: 1394. Can not insert into join view 'theater.nodate' without fields list	0.000 sec
+
+3b, same as insertion, view involving two different table joined together does not allow deletion.
+	Ex:delete from NoDate WHERE mID = 107;
+	19:59:05	delete from NoDate WHERE mID = 107	Error Code: 1395. Can not delete from join view 'theater.nodate'	0.000 sec
+
+3c. Yes, mishandeled update could happen, 
+	example:	
+	update NoDate set mID = 108
+	where mID = 106;
+	20:00:24	update NoDate set mID = 108   where mID = 106	1 row(s) affected Rows matched: 1  Changed: 1  Warnings: 0	0.016 sec
+
+3d. with check option, mishandled updates would be prevented.
+
+drop view if exists NoDate;
+  create view NoDate as
+  (select m.mID, r.rID, title, name from Movie m, Reviewer r, Rating t
+  where m.mID = t.mID and r.rID = t.rID and ratingDate is null) WITH CHECK OPTION;
+
+  20:06:43	update NoDate set mID = 108 where mID = 106	Error Code: 1369. CHECK OPTION failed 'theater.nodate'	0.000 sec
+
+
+
+
+
+
+NUMBER 4:
+4.drop view if exists Liked;
+  create view Liked as
+  select title, name from Movie m, Reviewer r, Rating t
+  where m.mID = t.mID and r.rID = t.rID and stars > 3
+
+4a.No, view involving two different table joined together does not allow insertion.
+	EX:
+	20:08:39	insert into Liked values('Titanic', 'Jackie Chan')	Error Code: 1394. Can not insert into join view 'theater.liked' without fields list	0.000 sec
+
+4b.same as insertion, view involving two different table joined together does not allow deletion.
+
+Ex:
+0	322	20:10:04	delete from Liked where title = 'Gone with the wind'	Error Code: 1395. Can not delete from join view 'theater.liked'	0.000 sec
+
+
+4c.yes, mishanled updates could happen with the example update Liked set title = 'titanic' where   
+   name = 'Sarah Martinez';
+
+Ex:20:11:04	update Liked set title = 'titanic' where       name = 'Sarah Martinez'	1 row(s) affected Rows matched: 1  Changed: 1  Warnings: 0	0.000 sec
+
+4d.with check option, mishandled updates would be prevented.
+
+drop view if exists Liked;
+  create view Liked as
+  (select title, name from Movie m, Reviewer r, Rating t
+  where m.mID = t.mID and r.rID = t.rID and stars > 3)
+  WITH CHECK OPTION;
+
+   20:06:43	update Liked set title = 'titanic' where       name = 'Sarah Martinez'	Error Code: 1369. CHECK OPTION failed 'theater.nodate'	0.000 sec
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

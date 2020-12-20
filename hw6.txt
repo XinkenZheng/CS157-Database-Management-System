@@ -1,0 +1,38 @@
+Transactions
+
+
+1.
+
+
+a.Nonserializable behavior is possible because the two select statements in Tranction 1 will be runned both before and after transaction 2.
+b.No, nonserializable behavior is not possible because the state of S unchanged before and after tranaction 2.
+c.Yes, nonserializable behavior is possible because the first and the third statements of Transaction 1 is executed before and after Transaction 2.
+
+2.
+a. since T2 is also serializible, it is allowed to read only committed data by T1, so we could get the pair(25,25) (40,40)
+b. if t2 is repeatable read, update in T1 is not allowed to update unless we rollback t2,so we could get(25,25) (40,40)
+c. if t2 is read committed,reads are only allowed after the transactions are completed, so we could get(25,25) (25,40) (40,40)
+d. if t2 is read uncommitted, dirty reads are allowed, which means we can read before t1 commits which might give,(25,25) (25,30) (25,40) (30,30) (30,40) (40,40)
+
+3.
+a. the weakest isolation level needed for transaction T to ensure that queries Q1 and Q2 will always get the same result is Read-Uncommitted
+b. the weakest isolation level needed for transaction T to ensure that queries Q1 and Q2 will always get the same result is Repeatable-Read
+c. the weakest isolation level needed for transaction T to ensure that queries Q1 and Q2 will always get the same result is Serializable
+d. Only a will guaranteed to always get the same result for Q1 and Q2
+
+4.
+(a) S1 S2 S3 S4 270
+    S3 S4 S1 S2 120
+
+(b) S1 S2 S3 S4 270
+    S3 S4 S1 S2 120
+
+(c) S1 S2 S3 S4 270
+    S3 S4 S1 S2 120
+    S1 S3 S2 S4 230
+    S1 S3 S4 S2 210
+    S3 S1 S2 S4 170
+    S3 S1 S4 S2 150
+
+120 150 170 210 230 270
+(d) S1 S2 300
